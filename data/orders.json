@@ -1,0 +1,26 @@
+[
+  {
+    "order_id": 1,
+    "customer_id": 1,
+    "customer_name": "Aigerim S.",
+    "items": [
+      {
+        "product_id": 3,
+        "product_name": "Notebook Set",
+        "quantity": 2,
+        "unit_price": 8.75,
+        "line_total": 17.5
+      },
+      {
+        "product_id": 5,
+        "product_name": "Water Bottle",
+        "quantity": 1,
+        "unit_price": 14.25,
+        "line_total": 14.25
+      }
+    ],
+    "total": 31.75,
+    "status": "Processed",
+    "created_at": "2026-05-13 09:00:00"
+  }
+]
