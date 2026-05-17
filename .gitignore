@@ -1,2 +1,4 @@
 .venv
 submission
+__pycache__/
+.idea/

@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from storage import CUSTOMERS_JSON, ORDERS_JSON, PRODUCTS_JSON, save_customers, save_orders, save_products
-from models import Customer, Order, OrderItem, Product
+from storage import CUSTOMERS_JSON, ORDERS_JSON, PRODUCTS_JSON, USERS_JSON, save_customers, save_orders, save_products, save_users
+from models import Customer, Order, OrderItem, Product, User
 
 
 def seed_sample_data():
-    data_files = [PRODUCTS_JSON, CUSTOMERS_JSON, ORDERS_JSON]
+    data_files = [PRODUCTS_JSON, CUSTOMERS_JSON, ORDERS_JSON, USERS_JSON]
     if all(Path(path).exists() for path in data_files):
         return
 
@@ -30,7 +30,12 @@ def seed_sample_data():
             "2026-05-13 09:00:00",
         )
     ]
+    users = [
+        User(1, "admin", "admin123", "admin", None),
+        User(2, "aigerim", "user123", "user", 1),
+    ]
 
     save_products(products)
     save_customers(customers)
     save_orders(orders)
+    save_users(users)

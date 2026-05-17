@@ -2,13 +2,14 @@ import csv
 import json
 from pathlib import Path
 
-from models import Customer, Order, Product
+from models import Customer, Order, Product, User
 
 
 DATA_DIR = Path(__file__).parent / "data"
 PRODUCTS_JSON = DATA_DIR / "products.json"
 CUSTOMERS_JSON = DATA_DIR / "customers.json"
 ORDERS_JSON = DATA_DIR / "orders.json"
+USERS_JSON = DATA_DIR / "users.json"
 
 
 def ensure_data_folder():
@@ -31,6 +32,9 @@ def save_json(path, records):
     ensure_data_folder()
     with path.open("w", encoding="utf-8") as file:
         json.dump(records, file, indent=2)
+
+
+
 
 
 def load_products():
@@ -58,6 +62,16 @@ def load_orders():
 def save_orders(orders):
     save_json(ORDERS_JSON, [order.to_dict() for order in orders])
     export_orders_csv(orders)
+
+
+def load_users():
+    return [User.from_dict(item) for item in load_json(USERS_JSON, [])]
+
+
+def save_users(users):
+    save_json(USERS_JSON, [user.to_dict() for user in users])
+
+
 
 
 def export_products_csv(products):

@@ -1,6 +1,36 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
+
+@dataclass
+class User:
+    user_id: int
+    username: str
+    password: str
+    role: str
+    customer_id: int | None = None
+
+    def to_dict(self):
+        return {
+            "user_id": self.user_id,
+            "username": self.username,
+            "password": self.password,
+            "role": self.role,
+            "customer_id": self.customer_id,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        customer_id = data.get("customer_id")
+        return cls(
+            user_id=int(data["user_id"]),
+            username=str(data["username"]),
+            password=str(data["password"]),
+            role=str(data["role"]),
+            customer_id=int(customer_id) if customer_id is not None else None,
+        )
+
+
 @dataclass
 class Product:
     product_id: int

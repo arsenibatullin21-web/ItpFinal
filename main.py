@@ -1,3 +1,4 @@
+from auth import AuthManager
 from customers import CustomerManager
 from inventory import InventoryManager
 from orders import OrderProcessor
@@ -53,6 +54,18 @@ def show_orders(orders):
             print(f"  - {item.product_name}: {item.quantity} x ${item.unit_price:.2f} = ${item.line_total:.2f}")
 
 
+def show_users(users):
+    if not users:
+        print("No users found.")
+        return
+
+    print("\nID | Username             | Role  | Customer ID")
+    print("-" * 52)
+    for user in users:
+        customer_id = user.customer_id if user.customer_id is not None else "-"
+        print(f"{user.user_id:<2} | {user.username:<20} | {user.role:<5} | {customer_id}")
+
+
 def add_product_menu(inventory):
     name = input("Product name: ").strip()
     category = input("Category: ").strip()
@@ -95,8 +108,9 @@ def add_customer_menu(customers):
     print(f"Added customer #{customer.customer_id}: {customer.name}")
 
 
-def create_order_menu(orders):
-    customer_id = read_int("Customer ID: ")
+def create_order_menu(orders, customer_id=None):
+    if customer_id is None:
+        customer_id = read_int("Customer ID: ")
     cart = {}
 
     print("Add products to the order. Enter 0 as product ID to finish.")
@@ -111,14 +125,62 @@ def create_order_menu(orders):
     print(f"Order #{order.order_id} processed successfully. Total: ${order.total:.2f}")
 
 
-def main():
-    seed_sample_data()
-    inventory = InventoryManager()
-    customers = CustomerManager()
-    orders = OrderProcessor(inventory, customers)
+def register_menu(auth, customers, allow_role_choice=False):
+    username = input("Username: ").strip()
+    password = input("Password: ").strip()
 
+    role = "user"
+    if allow_role_choice:
+        role = input("Role (admin/user): ").strip().lower() or "user"
+
+    customer_id = None
+    if role == "user":
+        print("Create customer profile for this user.")
+        name = input("Customer name: ").strip()
+        email = input("Email: ").strip()
+        phone = input("Phone: ").strip()
+        customer = customers.add_customer(name, email, phone)
+        customer_id = customer.customer_id
+
+    user = auth.register_user(username, password, role, customer_id)
+    print(f"Registered {user.role} account: {user.username}")
+    return user
+
+
+def login_menu(auth):
+    username = input("Username: ").strip()
+    password = input("Password: ").strip()
+    return auth.login(username, password)
+
+
+def authenticate(auth, customers):
     while True:
-        print("\nONLINE STORE INVENTORY & ORDER PROCESSING SYSTEM")
+        print("\nACCOUNT MENU")
+        print("1. Login")
+        print("2. Register as simple user")
+        print("0. Exit")
+
+        choice = input("Choose an option: ").strip()
+        try:
+            if choice == "1":
+                user = login_menu(auth)
+                print(f"Welcome, {user.username}! Role: {user.role}")
+                return user
+            elif choice == "2":
+                user = register_menu(auth, customers)
+                print("You can now use the system.")
+                return user
+            elif choice == "0":
+                return None
+            else:
+                print("Invalid menu choice. Please try again.")
+        except ValueError as error:
+            print(f"Error: {error}")
+
+
+def admin_menu(auth, inventory, customers, orders):
+    while True:
+        print("\nADMIN MENU")
         print("1. View products")
         print("2. Add product")
         print("3. Update product")
@@ -128,7 +190,9 @@ def main():
         print("7. Add customer")
         print("8. Create order")
         print("9. View orders")
-        print("0. Exit")
+        print("10. Register new account")
+        print("11. View users")
+        print("0. Logout")
 
         choice = input("Choose an option: ").strip()
 
@@ -152,8 +216,12 @@ def main():
                 create_order_menu(orders)
             elif choice == "9":
                 show_orders(orders.list_orders())
+            elif choice == "10":
+                register_menu(auth, customers, allow_role_choice=True)
+            elif choice == "11":
+                show_users(auth.users)
             elif choice == "0":
-                print("Goodbye!")
+                print("Logged out.")
                 break
             else:
                 print("Invalid menu choice. Please try again.")
@@ -161,5 +229,54 @@ def main():
             print(f"Error: {error}")
 
 
+def user_menu(current_user, inventory, orders):
+    while True:
+        print("\nUSER MENU")
+        print("1. View products")
+        print("2. Search products")
+        print("3. Create order")
+        print("4. View my orders")
+        print("0. Logout")
 
-main()
+        choice = input("Choose an option: ").strip()
+
+        try:
+            if choice == "1":
+                show_products(inventory.list_products())
+            elif choice == "2":
+                keyword = input("Search keyword: ").strip()
+                show_products(inventory.search_products(keyword))
+            elif choice == "3":
+                create_order_menu(orders, current_user.customer_id)
+            elif choice == "4":
+                my_orders = [order for order in orders.list_orders() if order.customer_id == current_user.customer_id]
+                show_orders(my_orders)
+            elif choice == "0":
+                print("Logged out.")
+                break
+            else:
+                print("Invalid menu choice. Please try again.")
+        except ValueError as error:
+            print(f"Error: {error}")
+
+
+def main():
+    seed_sample_data()
+    auth = AuthManager()
+    inventory = InventoryManager()
+    customers = CustomerManager()
+    orders = OrderProcessor(inventory, customers)
+
+    while True:
+        current_user = authenticate(auth, customers)
+        if current_user is None:
+            print("Goodbye!")
+            break
+        if current_user.role == "admin":
+            admin_menu(auth, inventory, customers, orders)
+        else:
+            user_menu(current_user, inventory, orders)
+
+
+if __name__ == "__main__":
+    main()
